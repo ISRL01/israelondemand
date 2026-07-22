@@ -10,7 +10,7 @@
    ========================================================================= */
 
 const site = {
-  name: "Israel Shobo",
+  name: "Israel Shobowale",
   title: "AWS Cloud Support Engineer",
   location: "Adelaide, Australia",
   tagline: "Methodical troubleshooter focused on least-privilege access, cloud-hosted apps, and clear documentation.",
