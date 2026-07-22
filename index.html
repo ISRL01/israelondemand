@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume</title>
+
+  <!-- Fonts load from Google when you're online; there are system fallbacks otherwise. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark theme">
+    <span class="theme-toggle__dot" aria-hidden="true"></span>
+    <span id="theme-toggle-label">Dark</span>
+  </button>
+
+  <div class="layout">
+    <!-- Left rail: identity, contacts, skills. Populated by script.js -->
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile__photo" id="photo-mount"></div>
+        <h1 class="profile__name" id="name"></h1>
+        <p class="profile__title" id="title"></p>
+        <p class="profile__location" id="location"></p>
+        <p class="profile__tagline" id="tagline"></p>
+      </div>
+
+      <section class="block">
+        <h2 class="block__title">Contact</h2>
+        <ul class="contacts" id="contacts"></ul>
+      </section>
+
+      <section class="block">
+        <h2 class="block__title">Skills</h2>
+        <ul class="skills" id="skills"></ul>
+      </section>
+    </aside>
+
+    <!-- Main column: summary, interactive timeline, education. Populated by script.js -->
+    <main class="main" id="main">
+      <section class="panel">
+        <h2 class="section-title">Profile</h2>
+        <p class="summary" id="summary"></p>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2 class="section-title">Experience</h2>
+          <button id="toggle-all" class="ghost-btn" type="button" aria-pressed="false">Expand all</button>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Education</h2>
+        <div class="education" id="education"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
