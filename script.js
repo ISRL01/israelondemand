@@ -1,25 +1,25 @@
 /* =========================================================================
-   YOUR RESUME CONTENT
+   YOUR CONTENT — edit this object and the whole site rebuilds.
    -------------------------------------------------------------------------
-   This is the only part you need to edit. Replace the placeholder text below
-   with your own details. The page rebuilds itself from this object — you do
-   not need to touch index.html or styles.css.
-
-   Headshot: put your image in this same folder and name it "headshot.jpg"
-   (or change `photo` below to your filename). If the image is missing, your
-   initials show automatically.
+   Headshot: keep headshot.jpg in this folder (or change `photo`).
+   Add a project: copy one block in `projects` and change the fields.
+     - diagram: path to an image/SVG in your repo (e.g. "diagrams/foo.svg"),
+                or "" to show a placeholder.
+     - video:   a YouTube video ID (the part after v=), or "" for none.
+     - github / demo: links, or "" to hide that button.
    ========================================================================= */
 
-const resume = {
+const site = {
   name: "Israel Shobo",
   title: "AWS Cloud Support Engineer",
   location: "Adelaide, Australia",
   tagline: "Methodical troubleshooter focused on least-privilege access, cloud-hosted apps, and clear documentation.",
   photo: "headshot.jpg",
 
-  contacts: [
-    { label: "Email", text: "dammyshobo@gmail.com", href: "mailto:dammyshobo@gmail.com" },
-    { label: "Phone", text: "0432 704 934",         href: "tel:+61432704934" }
+  links: [
+    { label: "GitHub",   href: "https://github.com/ISRL01" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/your-handle" },  // <- update
+    { label: "Email",    href: "mailto:dammyshobo@gmail.com" }
   ],
 
   summary:
@@ -35,7 +35,6 @@ const resume = {
     "Log analysis", "Documentation", "AWS SAA (in progress)"
   ],
 
-  // Newest role first. Each entry becomes an interactive timeline item.
   experience: [
     {
       role: "Cloud Support Engineer",
@@ -65,221 +64,276 @@ const resume = {
   ],
 
   education: [
+    { qualification: "Master of Business System Analytics (Adv)", institution: "Torrens University, Adelaide, Australia", dates: "2023 — 2024" },
+    { qualification: "BSc, Management Information Systems", institution: "Eastern Mediterranean University, Turkey", dates: "2013 — 2018" }
+  ],
+
+  projects: [
     {
-      qualification: "Master of Business System Analytics (Adv)",
-      institution: "Torrens University, Adelaide, Australia",
-      dates: "2023 — 2024",
-      detail: ""
+      id: "aws-portfolio",
+      title: "This site, deployed on AWS",
+      blurb: "A hand-coded static portfolio with a fully automated AWS deploy pipeline.",
+      diagram: "",            // add e.g. "diagrams/aws-portfolio.svg"
+      video: "",
+      tech: ["S3", "CloudFront", "Route 53", "ACM", "GitHub Actions", "IAM / OIDC"],
+      github: "https://github.com/ISRL01/israelondemand",
+      demo: "https://israelondemand.com",
+      writeup: [
+        { type: "p", text: "The site you're reading is itself the project: a static portfolio built from plain HTML, CSS and JavaScript, hosted on AWS and deployed automatically on every git push." },
+        { type: "h", text: "How it's built" },
+        { type: "p", text: "Files live in S3, with CloudFront in front for HTTPS and global caching, and Route 53 pointing my domain at the distribution. There's no server and no database — the sidebar navigation is client-side JavaScript, so the whole thing stays static and cheap to run." },
+        { type: "h", text: "The pipeline" },
+        { type: "p", text: "GitHub Actions deploys on push using an IAM role assumed via OIDC — no long-lived access keys stored anywhere — scoped with least-privilege permissions to just this bucket. Editing the site is now: commit, push, done." }
+      ]
     },
     {
-      qualification: "BSc, Management Information Systems",
-      institution: "Eastern Mediterranean University, Turkey",
-      dates: "2013 — 2018",
-      detail: ""
+      id: "ppl-tracker",
+      title: "PPL strength-training tracker",
+      blurb: "A push/pull/legs gym tracker built around a double-progression engine.",
+      diagram: "",
+      video: "",
+      tech: ["React", "Vite", "Supabase", "PWA"],
+      github: "",
+      demo: "",
+      writeup: [
+        { type: "p", text: "A personal strength-training web app that plans and logs push/pull/legs sessions and drives progression automatically." },
+        { type: "h", text: "What it does" },
+        { type: "p", text: "The core is a double-progression engine: it tracks weight-and-reps against a configurable rep range and tells you when to add load. Every session closes with two ab exercises regardless of day type." },
+        { type: "h", text: "Stack" },
+        { type: "p", text: "Built with React + Vite on a Supabase backend (Postgres, row-level security), shipped PWA-first with a clean, auth-ready schema so features can be layered on without costly refactors." }
+      ]
     }
   ]
 };
 
 /* =========================================================================
-   Rendering + interactivity — you shouldn't need to change anything below.
+   Rendering + routing — you shouldn't need to edit below here.
    ========================================================================= */
 
-const $ = (sel) => document.querySelector(sel);
+const $ = (s) => document.querySelector(s);
+const view = () => $("#view-main");
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function initials(name) { return name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(); }
 
-function el(tag, className, html) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (html != null) node.innerHTML = html;
-  return node;
-}
+/* ---- Sidebar (rendered once) ---- */
+function renderSidebar() {
+  $("#side-name").textContent = site.name;
+  $("#side-title").textContent = site.title;
+  document.title = site.name + " — Portfolio";
 
-function initials(name) {
-  return name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-}
-
-/* ---- Header / identity ---- */
-function renderProfile() {
-  $("#name").textContent = resume.name;
-  $("#title").textContent = resume.title;
-  $("#location").textContent = resume.location;
-  $("#tagline").textContent = resume.tagline;
-  document.title = resume.name + " — Resume";
-
-  const mount = $("#photo-mount");
+  const mount = $("#side-photo");
   const img = new Image();
-  img.alt = resume.name;
-  img.src = resume.photo;
+  img.alt = site.name; img.src = site.photo;
   img.onload = () => { mount.innerHTML = ""; mount.appendChild(img); };
-  img.onerror = () => { mount.innerHTML = ""; mount.appendChild(el("div", "initials", initials(resume.name))); };
+  img.onerror = () => { mount.innerHTML = '<span class="initials">' + initials(site.name) + "</span>"; };
+
+  $("#side-links").innerHTML = site.links
+    .map((l) => `<a href="${esc(l.href)}"${l.href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}>${esc(l.label)} \u2197</a>`)
+    .join("");
 }
 
-/* ---- Contacts ---- */
-function renderContacts() {
-  const list = $("#contacts");
-  resume.contacts.forEach((c) => {
-    const li = el("li");
-    li.appendChild(el("span", "label", c.label));
-    const a = el("a", null, c.text);
-    a.href = c.href;
-    if (c.href.startsWith("http")) { a.target = "_blank"; a.rel = "noopener"; }
-    li.appendChild(a);
-    list.appendChild(li);
-  });
+/* ---- Resume view ---- */
+function photoBlock(cls) {
+  return `<span class="${cls}"><span class="initials">${initials(site.name)}</span></span>`;
+}
+function renderResume() {
+  const exp = site.experience.map((job, i) => `
+    <div class="entry reveal" data-entry="${i}">
+      <button class="entry__header" type="button" aria-expanded="false">
+        <span>
+          <span class="entry__role">${esc(job.role)}</span>
+          <span class="entry__company"><strong>${esc(job.company)}</strong></span>
+        </span>
+        <span class="entry__dates">${esc(job.dates)}</span>
+        <span class="entry__chev">\u25be</span>
+      </button>
+      <div class="entry__panel"><div class="entry__inner"><div class="entry__body">
+        ${job.summary ? `<p class="entry__summary">${esc(job.summary)}</p>` : ""}
+        ${job.highlights && job.highlights.length ? `<ul class="entry__highlights">${job.highlights.map((h) => `<li>${esc(h)}</li>`).join("")}</ul>` : ""}
+        ${job.tags && job.tags.length ? `<ul class="tags">${job.tags.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+      </div></div></div>
+    </div>`).join("");
+
+  view().innerHTML = `
+    <section class="hero reveal">
+      ${photoBlock("hero__photo")}
+      <div>
+        <h1 class="hero__name">${esc(site.name)}</h1>
+        <p class="hero__title">${esc(site.title)}</p>
+        <p class="hero__loc">${esc(site.location)}</p>
+        <p class="hero__tagline">${esc(site.tagline)}</p>
+      </div>
+    </section>
+
+    <section class="panel reveal">
+      <h2 class="section-title">Profile</h2>
+      <p class="summary">${esc(site.summary)}</p>
+    </section>
+
+    <section class="panel reveal">
+      <div class="section-head">
+        <h2 class="section-title">Experience</h2>
+        <button id="toggle-all" class="ghost-btn" type="button">Expand all</button>
+      </div>
+      <div class="timeline">${exp}</div>
+    </section>
+
+    <section class="panel reveal">
+      <h2 class="section-title">Skills</h2>
+      <ul class="skills">${site.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+    </section>
+
+    <section class="panel reveal">
+      <h2 class="section-title">Education</h2>
+      <div class="education">${site.education.map((e) => `
+        <div class="edu">
+          <div class="edu__qual">${esc(e.qualification)}</div>
+          <div class="edu__dates">${esc(e.dates)}</div>
+          <div class="edu__inst">${esc(e.institution)}</div>
+        </div>`).join("")}</div>
+    </section>`;
+  // swap in the real headshot if present
+  swapPhoto(".hero__photo");
 }
 
-/* ---- Skills ---- */
-function renderSkills() {
-  const list = $("#skills");
-  resume.skills.forEach((s) => list.appendChild(el("li", null, s)));
+function swapPhoto(sel) {
+  const mount = $(sel); if (!mount) return;
+  const img = new Image();
+  img.alt = site.name; img.src = site.photo;
+  img.onload = () => { mount.innerHTML = ""; mount.appendChild(img); };
 }
 
-/* ---- Summary ---- */
-function renderSummary() { $("#summary").textContent = resume.summary; }
+/* ---- Projects list ---- */
+function renderProjects() {
+  view().innerHTML = `
+    <p class="eyebrow">Selected work</p>
+    <h2 class="section-title">Projects</h2>
+    <div class="proj-grid">
+      ${site.projects.map((p) => `
+        <a class="card reveal" href="#project/${esc(p.id)}">
+          <span class="card__title">${esc(p.title)}</span>
+          <span class="card__blurb">${esc(p.blurb)}</span>
+          <span class="card__more">Read more \u2192</span>
+        </a>`).join("")}
+    </div>`;
+}
 
-/* ---- Interactive experience timeline ---- */
-function renderTimeline() {
-  const wrap = $("#timeline");
+/* ---- Single project ---- */
+function renderProjectDetail(id) {
+  const p = site.projects.find((x) => x.id === id);
+  if (!p) { location.hash = "#projects"; return; }
 
-  resume.experience.forEach((job, i) => {
-    const entry = el("div", "entry reveal");
+  const diagram = p.diagram
+    ? `<img class="diagram" src="${esc(p.diagram)}" alt="Architecture diagram for ${esc(p.title)}">`
+    : `<div class="diagram-empty">architecture diagram \u2014 add an image path in the project's <code>diagram</code> field</div>`;
 
-    const panelId = "panel-" + i;
-    const header = el("button", "entry__header");
-    header.type = "button";
-    header.setAttribute("aria-expanded", "false");
-    header.setAttribute("aria-controls", panelId);
+  const video = p.video
+    ? `<div class="video"><iframe src="https://www.youtube.com/embed/${esc(p.video)}" title="${esc(p.title)} walkthrough" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+    : `<div class="video-empty">video walkthrough \u2014 add a YouTube video ID in the project's <code>video</code> field</div>`;
 
-    const roleWrap = el("div");
-    roleWrap.appendChild(el("div", "entry__role", job.role));
-    roleWrap.appendChild(el("div", "entry__company", "<strong>" + job.company + "</strong>"));
+  const writeup = (p.writeup || []).map((b) =>
+    b.type === "h" ? `<h3>${esc(b.text)}</h3>` : `<p>${esc(b.text)}</p>`).join("");
 
-    header.appendChild(roleWrap);
-    header.appendChild(el("div", "entry__dates", job.dates));
-    header.appendChild(el("div", "entry__chev", "▾"));
+  const actions = [
+    p.github ? `<a class="btn" href="${esc(p.github)}" target="_blank" rel="noopener">View code on GitHub \u2197</a>` : "",
+    p.demo ? `<a class="btn btn--primary" href="${esc(p.demo)}" target="_blank" rel="noopener">Live demo \u2197</a>` : ""
+  ].join("");
 
-    // Expandable panel
-    const panel = el("div", "entry__panel");
-    panel.id = panelId;
-    const inner = el("div", "entry__inner");
-    const body = el("div", "entry__body");
+  view().innerHTML = `
+    <a class="back" href="#projects">\u2190 All projects</a>
+    <div class="proj-head reveal">
+      <h1 class="proj-title">${esc(p.title)}</h1>
+      <p class="proj-blurb">${esc(p.blurb)}</p>
+      ${p.tech && p.tech.length ? `<ul class="tags">${p.tech.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="reveal">${diagram}</div>
+    <div class="reveal">${video}</div>
+    <div class="writeup reveal">${writeup}</div>
+    ${actions ? `<div class="proj-actions reveal">${actions}</div>` : ""}`;
+}
 
-    if (job.summary) body.appendChild(el("p", "entry__summary", job.summary));
+/* ---- Router ---- */
+function route() {
+  const raw = location.hash.replace(/^#/, "") || "resume";
+  const [section, id] = raw.split("/");
 
-    if (job.highlights && job.highlights.length) {
-      const ul = el("ul", "entry__highlights");
-      job.highlights.forEach((h) => ul.appendChild(el("li", null, h)));
-      body.appendChild(ul);
+  if (section === "projects") renderProjects();
+  else if (section === "project" && id) renderProjectDetail(id);
+  else renderResume();
+
+  const navSection = section === "project" ? "projects" : section;
+  document.querySelectorAll(".side-nav a").forEach((a) =>
+    a.classList.toggle("is-active", a.dataset.section === navSection));
+
+  window.scrollTo(0, 0);
+  setupReveal();
+}
+
+/* ---- Interactions (event delegation, survives re-renders) ---- */
+function setupInteractions() {
+  view().addEventListener("click", (e) => {
+    const header = e.target.closest(".entry__header");
+    if (header) {
+      const entry = header.closest(".entry");
+      const open = entry.classList.toggle("is-open");
+      header.setAttribute("aria-expanded", String(open));
+      syncToggleAll();
+      return;
     }
-
-    if (job.tags && job.tags.length) {
-      const tags = el("ul", "tags");
-      job.tags.forEach((t) => tags.appendChild(el("li", null, t)));
-      body.appendChild(tags);
+    if (e.target.id === "toggle-all") {
+      const entries = [...view().querySelectorAll(".entry")];
+      const anyClosed = entries.some((x) => !x.classList.contains("is-open"));
+      entries.forEach((x) => {
+        x.classList.toggle("is-open", anyClosed);
+        x.querySelector(".entry__header").setAttribute("aria-expanded", String(anyClosed));
+      });
+      syncToggleAll();
     }
-
-    inner.appendChild(body);
-    panel.appendChild(inner);
-
-    header.addEventListener("click", () => toggleEntry(entry, header));
-
-    entry.appendChild(header);
-    entry.appendChild(panel);
-    wrap.appendChild(entry);
   });
 }
-
-function toggleEntry(entry, header) {
-  const open = entry.classList.toggle("is-open");
-  header.setAttribute("aria-expanded", String(open));
-  syncToggleAll();
-}
-
-/* ---- Expand all / collapse all ---- */
-function setupToggleAll() {
-  $("#toggle-all").addEventListener("click", () => {
-    const entries = [...document.querySelectorAll(".entry")];
-    const anyClosed = entries.some((e) => !e.classList.contains("is-open"));
-    entries.forEach((e) => {
-      e.classList.toggle("is-open", anyClosed);
-      e.querySelector(".entry__header").setAttribute("aria-expanded", String(anyClosed));
-    });
-    syncToggleAll();
-  });
-}
-
 function syncToggleAll() {
-  const entries = [...document.querySelectorAll(".entry")];
-  const allOpen = entries.length && entries.every((e) => e.classList.contains("is-open"));
-  const btn = $("#toggle-all");
+  const btn = $("#toggle-all"); if (!btn) return;
+  const entries = [...view().querySelectorAll(".entry")];
+  const allOpen = entries.length && entries.every((x) => x.classList.contains("is-open"));
   btn.textContent = allOpen ? "Collapse all" : "Expand all";
-  btn.setAttribute("aria-pressed", String(!!allOpen));
 }
 
-/* ---- Education ---- */
-function renderEducation() {
-  const wrap = $("#education");
-  resume.education.forEach((e) => {
-    const card = el("div", "edu reveal");
-    card.appendChild(el("div", "edu__qual", e.qualification));
-    card.appendChild(el("div", "edu__dates", e.dates));
-    card.appendChild(el("div", "edu__inst", e.institution));
-    if (e.detail) card.appendChild(el("div", "edu__detail", e.detail));
-    wrap.appendChild(card);
-  });
-}
-
-/* ---- Theme toggle (persists in this browser) ---- */
+/* ---- Theme ---- */
 function setupTheme() {
-  const root = document.documentElement;
-  const btn = $("#theme-toggle");
-  const label = $("#theme-toggle-label");
-
-  let saved = null;
-  try { saved = localStorage.getItem("resume-theme"); } catch (e) { /* ignore */ }
+  const root = document.documentElement, btn = $("#theme-toggle"), label = $("#theme-toggle-label");
+  let saved = null; try { saved = localStorage.getItem("site-theme"); } catch (e) {}
   if (saved) root.setAttribute("data-theme", saved);
-
   const sync = () => {
     const dark = root.getAttribute("data-theme") === "dark";
     label.textContent = dark ? "Light" : "Dark";
     btn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
   };
   sync();
-
   btn.addEventListener("click", () => {
     const dark = root.getAttribute("data-theme") === "dark";
     const next = dark ? "light" : "dark";
     root.setAttribute("data-theme", next);
-    try { localStorage.setItem("resume-theme", next); } catch (e) { /* ignore */ }
+    try { localStorage.setItem("site-theme", next); } catch (e) {}
     sync();
   });
 }
 
-/* ---- Scroll-reveal (skips if reduced motion) ---- */
+/* ---- Reveal on scroll ---- */
 function setupReveal() {
-  const items = [...document.querySelectorAll(".reveal")];
+  const items = [...view().querySelectorAll(".reveal:not(.is-visible)")];
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce || !("IntersectionObserver" in window)) {
-    items.forEach((i) => i.classList.add("is-visible"));
-    return;
-  }
+  if (reduce || !("IntersectionObserver" in window)) { items.forEach((i) => i.classList.add("is-visible")); return; }
   const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) { entry.target.classList.add("is-visible"); io.unobserve(entry.target); }
-    });
-  }, { threshold: 0.15 });
+    entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-visible"); io.unobserve(en.target); } });
+  }, { threshold: 0.12 });
   items.forEach((i) => io.observe(i));
 }
 
 /* ---- Boot ---- */
 document.addEventListener("DOMContentLoaded", () => {
-  renderProfile();
-  renderContacts();
-  renderSkills();
-  renderSummary();
-  renderTimeline();
-  renderEducation();
-  setupToggleAll();
-  syncToggleAll();
+  renderSidebar();
+  setupInteractions();
   setupTheme();
-  setupReveal();
+  window.addEventListener("hashchange", route);
+  route();
 });
