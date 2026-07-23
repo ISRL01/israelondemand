@@ -232,3 +232,42 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .entry__panel { grid-template-rows: 1fr !important; }
   .panel, .entry, .card { break-inside: avoid; }
 }
+
+/* ---------- Tic-tac-toe ------------------------------------------------ */
+.ttt { margin: 8px 0 28px; padding: 22px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+.ttt-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ttt-modes { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.ttt-mode { font-family: var(--font-mono); font-size: 11.5px; padding: 7px 14px; border: 0;
+  background: transparent; color: var(--muted); cursor: pointer; transition: background .18s, color .18s; }
+.ttt-mode:hover { color: var(--ink); }
+.ttt-mode.is-on { background: var(--accent); color: #fff; }
+.ttt-reset { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-ink);
+  background: transparent; border: 1px solid var(--line); padding: 7px 14px; border-radius: 999px;
+  cursor: pointer; transition: background .2s, border-color .2s; }
+.ttt-reset:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+.ttt-status { font-family: var(--font-mono); font-size: 13px; color: var(--muted);
+  text-align: center; margin: 18px 0 14px; min-height: 1.2em; }
+
+.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  width: 100%; max-width: 320px; margin: 0 auto; }
+.ttt-cell { aspect-ratio: 1 / 1; display: grid; place-items: center; padding: 0;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer; transition: background .16s, border-color .16s, transform .16s; }
+.ttt-cell:not(:disabled):hover { background: var(--accent-soft); border-color: var(--accent); }
+.ttt-cell:disabled { cursor: default; }
+.ttt-cell.is-win { background: var(--accent-soft); border-color: var(--accent); }
+
+.ttt-mark { font-family: var(--font-display); font-size: 42px; font-weight: 500; line-height: 1;
+  animation: ttt-pop .18s ease-out; }
+.ttt-x { color: var(--accent-ink); }
+.ttt-o { color: var(--muted); }
+@keyframes ttt-pop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+
+.ttt-score { display: flex; justify-content: center; gap: 26px; margin-top: 20px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--faint); }
+.ttt-score b { color: var(--ink); font-size: 14px; margin-right: 4px; }
+
+@media (prefers-reduced-motion: reduce) { .ttt-mark { animation: none; } }

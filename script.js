@@ -11,7 +11,7 @@
 
 const site = {
   name: "Israel Shobowale",
-  title: "AWS Cloud Support Engineer",
+  title: "AWS Cloud Engineer",
   location: "Adelaide, Australia",
   tagline: "Methodical troubleshooter focused on least-privilege access, cloud-hosted apps, and clear documentation.",
   photo: "headshot.jpg",
@@ -84,6 +84,26 @@ const site = {
         { type: "p", text: "Files live in S3, with CloudFront in front for HTTPS and global caching, and Route 53 pointing my domain at the distribution. There's no server and no database — the sidebar navigation is client-side JavaScript, so the whole thing stays static and cheap to run." },
         { type: "h", text: "The pipeline" },
         { type: "p", text: "GitHub Actions deploys on push using an IAM role assumed via OIDC — no long-lived access keys stored anywhere — scoped with least-privilege permissions to just this bucket. Editing the site is now: commit, push, done." }
+      ]
+    },
+    {
+      id: "tic-tac-toe",
+      title: "Tic-tac-toe, playable here",
+      blurb: "A browser game with two-player mode and an unbeatable computer opponent.",
+      component: "tictactoe",   // renders the live game in place of a diagram
+      diagram: "",
+      video: "",
+      tech: ["JavaScript", "Minimax", "DOM", "Accessibility"],
+      github: "https://github.com/ISRL01/israelondemand",
+      demo: "",
+      writeup: [
+        { type: "p", text: "A small game built in plain JavaScript \u2014 no framework, no build step. Play it above: switch between two-player and the computer opponent, which cannot be beaten." },
+        { type: "h", text: "How the computer plays" },
+        { type: "p", text: "The opponent uses minimax, a recursive algorithm that plays out every remaining sequence of moves and scores each one, assuming both sides play optimally. It then picks the move with the best guaranteed outcome. Wins are scored higher when they arrive sooner and losses lower when they arrive later, so it takes the quickest win available and stalls as long as possible when losing. The best any player can manage against it is a draw." },
+        { type: "h", text: "Building it" },
+        { type: "p", text: "Board state is a nine-item array, and a single check against the eight winning lines decides each turn's outcome. The interface re-renders from that state after every move, with one delegated click handler for the whole board. Squares are real buttons with labels, so the game is keyboard and screen-reader accessible." },
+        { type: "h", text: "How it's deployed" },
+        { type: "p", text: "It ships as part of this site \u2014 static files in GitHub, deployed automatically to AWS Amplify on every push, with no server or database behind it." }
       ]
     },
     {
@@ -223,13 +243,16 @@ function renderProjectDetail(id) {
   const p = site.projects.find((x) => x.id === id);
   if (!p) { location.hash = "#projects"; return; }
 
-  const diagram = p.diagram
-    ? `<img class="diagram" src="${esc(p.diagram)}" alt="Architecture diagram for ${esc(p.title)}">`
-    : `<div class="diagram-empty">architecture diagram \u2014 add an image path in the project's <code>diagram</code> field</div>`;
+  // A project can show a live interactive component instead of a diagram.
+  const showcase = p.component
+    ? `<div id="component-mount"></div>`
+    : (p.diagram
+        ? `<img class="diagram" src="${esc(p.diagram)}" alt="Architecture diagram for ${esc(p.title)}">`
+        : `<div class="diagram-empty">architecture diagram \u2014 add an image path in the project's <code>diagram</code> field</div>`);
 
   const video = p.video
     ? `<div class="video"><iframe src="https://www.youtube.com/embed/${esc(p.video)}" title="${esc(p.title)} walkthrough" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
-    : `<div class="video-empty">video walkthrough \u2014 add a YouTube video ID in the project's <code>video</code> field</div>`;
+    : (p.component ? "" : `<div class="video-empty">video walkthrough \u2014 add a YouTube video ID in the project's <code>video</code> field</div>`);
 
   const writeup = (p.writeup || []).map((b) =>
     b.type === "h" ? `<h3>${esc(b.text)}</h3>` : `<p>${esc(b.text)}</p>`).join("");
@@ -246,10 +269,14 @@ function renderProjectDetail(id) {
       <p class="proj-blurb">${esc(p.blurb)}</p>
       ${p.tech && p.tech.length ? `<ul class="tags">${p.tech.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
     </div>
-    <div class="reveal">${diagram}</div>
+    <div class="reveal">${showcase}</div>
     <div class="reveal">${video}</div>
     <div class="writeup reveal">${writeup}</div>
     ${actions ? `<div class="proj-actions reveal">${actions}</div>` : ""}`;
+
+  if (p.component === "tictactoe" && window.mountTicTacToe) {
+    window.mountTicTacToe(document.getElementById("component-mount"));
+  }
 }
 
 /* ---- Router ---- */
