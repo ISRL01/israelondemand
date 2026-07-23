@@ -271,3 +271,15 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ttt-score b { color: var(--ink); font-size: 14px; margin-right: 4px; }
 
 @media (prefers-reduced-motion: reduce) { .ttt-mark { animation: none; } }
+
+/* ---------- Visitor counter ------------------------------------------- */
+.visits { font-family: var(--font-mono); font-size: 11.5px; color: var(--faint);
+  padding: 6px 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+.visits__count { color: var(--accent-ink); font-weight: 500; }
+.visits__today { color: var(--faint); }
+
+/* ---------- Content load failure --------------------------------------- */
+.load-error { padding: 20px 22px; border: 1px dashed var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--muted); max-width: 60ch; }
+.load-error h2 { font-family: var(--font-display); font-weight: 500; font-size: 20px; margin: 0 0 8px; color: var(--ink); }
+.load-error code { font-family: var(--font-mono); font-size: 12.5px; }

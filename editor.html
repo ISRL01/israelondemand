@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Content editor</title>
+<style>
+  :root{
+    --paper:#F4F5F3; --surface:#fff; --ink:#16202A; --muted:#566470; --faint:#8A96A1;
+    --line:#E1E5E3; --accent:#0B6E7C; --accent-ink:#084E59; --accent-soft:#E1EEF1;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 22px 120px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 22px}
+  h2{font-size:15px;margin:0;letter-spacing:.02em}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .card > summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .card > summary::-webkit-details-marker{display:none}
+  .card > summary:hover{background:var(--accent-soft)}
+  .count{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .body{padding:4px 16px 18px;border-top:1px solid var(--line)}
+
+  label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:12px 0 4px}
+  input,textarea,select{width:100%;font-family:var(--body);font-size:14px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  textarea{resize:vertical;min-height:64px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;background:var(--paper)}
+  .item-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .item-title{font-weight:600;font-size:13.5px}
+  .inline{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .inline input{flex:1}
+
+  button{font-family:var(--mono);font-size:11.5px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);padding:6px 12px;cursor:pointer}
+  button:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .danger{color:#B3261E}
+  .danger:hover{border-color:#B3261E;background:#FDECEA}
+  .add{margin-top:12px}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+    padding:12px 22px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+  .primary{background:var(--accent);border-color:var(--accent);color:#fff;font-size:12.5px;padding:9px 18px}
+  .primary:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+  .status{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .note{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    font-size:13px;color:var(--muted);margin-bottom:18px}
+  code{font-family:var(--mono);font-size:12px;background:var(--paper);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Content editor</h1>
+  <p class="sub">Edit your site content in forms, then download a valid <code>content.json</code>.</p>
+
+  <div class="note">
+    Changes here are <strong>not saved automatically</strong>. When you're done, click
+    <strong>Download content.json</strong>, drop the file into your repo (replacing the old one), then commit and push.
+  </div>
+
+  <div id="forms"></div>
+</div>
+
+<div class="bar">
+  <span class="status" id="status">loading…</span>
+  <button id="load-btn">Load a file…</button>
+  <input type="file" id="file-input" accept="application/json" hidden />
+  <button class="primary" id="save-btn">Download content.json</button>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Small form builder. Everything writes straight back into `data`, so the
+   downloaded JSON is always structurally valid — no punctuation to get wrong.
+   --------------------------------------------------------------------------- */
+let data = null;
+
+const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls;
+  if (html != null) n.innerHTML = html; return n; };
+const status = (msg) => { document.getElementById("status").textContent = msg; };
+
+/* a labelled input bound to obj[key] */
+function field(obj, key, label, opts) {
+  opts = opts || {};
+  const wrap = el("div");
+  wrap.appendChild(el("label", null, label));
+  const input = document.createElement(opts.multiline ? "textarea" : "input");
+  if (opts.rows) input.rows = opts.rows;
+  input.value = obj[key] == null ? "" : obj[key];
+  if (opts.placeholder) input.placeholder = opts.placeholder;
+  input.addEventListener("input", () => { obj[key] = input.value; });
+  wrap.appendChild(input);
+  return wrap;
+}
+
+/* an editable list of plain strings (skills, tags, highlights) */
+function stringList(arr, label, placeholder) {
+  const wrap = el("div");
+  wrap.appendChild(el("label", null, label));
+  const list = el("div");
+  wrap.appendChild(list);
+
+  function draw() {
+    list.innerHTML = "";
+    arr.forEach((v, i) => {
+      const row = el("div", "inline");
+      const input = el("input");
+      input.value = v;
+      input.placeholder = placeholder || "";
+      input.addEventListener("input", () => { arr[i] = input.value; });
+      const del = el("button", "danger", "Remove");
+      del.type = "button";
+      del.addEventListener("click", () => { arr.splice(i, 1); draw(); });
+      row.appendChild(input); row.appendChild(del);
+      list.appendChild(row);
+    });
+    const add = el("button", "add", "+ Add");
+    add.type = "button";
+    add.addEventListener("click", () => { arr.push(""); draw(); });
+    list.appendChild(add);
+  }
+  draw();
+  return wrap;
+}
+
+/* a repeating list of objects, rendered by `build(item, redraw)` */
+function objectList(arr, label, titleOf, blank, build) {
+  const wrap = el("div");
+  wrap.appendChild(el("label", null, label));
+  const list = el("div");
+  wrap.appendChild(list);
+
+  function draw() {
+    list.innerHTML = "";
+    arr.forEach((item, i) => {
+      const box = el("div", "item");
+      const head = el("div", "item-head");
+      head.appendChild(el("span", "item-title", titleOf(item, i) || "Untitled"));
+      const tools = el("div");
+      if (i > 0) {
+        const up = el("button", null, "↑"); up.type = "button";
+        up.addEventListener("click", () => { const t = arr[i - 1]; arr[i - 1] = arr[i]; arr[i] = t; draw(); });
+        tools.appendChild(up);
+      }
+      const del = el("button", "danger", "Remove"); del.type = "button";
+      del.addEventListener("click", () => { if (confirm("Remove this item?")) { arr.splice(i, 1); draw(); } });
+      tools.appendChild(del);
+      head.appendChild(tools);
+      box.appendChild(head);
+      build(item, box, draw);
+      list.appendChild(box);
+    });
+    const add = el("button", "add", "+ Add");
+    add.type = "button";
+    add.addEventListener("click", () => { arr.push(JSON.parse(JSON.stringify(blank))); draw(); });
+    list.appendChild(add);
+  }
+  draw();
+  return wrap;
+}
+
+function section(title, countText, buildBody, open) {
+  const d = el("details", "card");
+  if (open) d.open = true;
+  const s = el("summary");
+  s.appendChild(el("h2", null, title));
+  s.appendChild(el("span", "count", countText || ""));
+  d.appendChild(s);
+  const body = el("div", "body");
+  buildBody(body);
+  d.appendChild(body);
+  return d;
+}
+
+/* ---- Build the whole form ---- */
+function render() {
+  const root = document.getElementById("forms");
+  root.innerHTML = "";
+
+  // Profile
+  root.appendChild(section("Profile", "", (b) => {
+    b.appendChild(field(data, "name", "Name"));
+    b.appendChild(field(data, "title", "Job title"));
+    b.appendChild(field(data, "location", "Location"));
+    b.appendChild(field(data, "tagline", "Tagline", { multiline: true, rows: 2 }));
+    b.appendChild(field(data, "photo", "Headshot file", { placeholder: "headshot.jpg" }));
+    b.appendChild(field(data, "visitsApi", "Visitor counter URL (blank = hidden)",
+      { placeholder: "https://xxxx.lambda-url.us-east-1.on.aws/" }));
+    b.appendChild(field(data, "summary", "Profile summary", { multiline: true, rows: 5 }));
+  }, true));
+
+  // Links
+  root.appendChild(section("Links", data.links.length + " links", (b) => {
+    b.appendChild(objectList(data.links, "Sidebar links",
+      (l) => l.label || "Link",
+      { label: "", href: "" },
+      (item, box) => {
+        const row = el("div", "row");
+        row.appendChild(field(item, "label", "Label"));
+        row.appendChild(field(item, "href", "URL"));
+        box.appendChild(row);
+      }));
+  }));
+
+  // Skills
+  root.appendChild(section("Skills", data.skills.length + " skills", (b) => {
+    b.appendChild(stringList(data.skills, "Skill chips", "e.g. CloudFormation"));
+  }));
+
+  // Experience
+  root.appendChild(section("Experience", data.experience.length + " roles", (b) => {
+    b.appendChild(objectList(data.experience, "Roles (newest first)",
+      (j) => (j.role || "Role") + " — " + (j.company || ""),
+      { role: "", company: "", dates: "", summary: "", highlights: [], tags: [] },
+      (item, box) => {
+        const row = el("div", "row");
+        row.appendChild(field(item, "role", "Role"));
+        row.appendChild(field(item, "company", "Company"));
+        box.appendChild(row);
+        box.appendChild(field(item, "dates", "Dates", { placeholder: "Oct 2024 — Present" }));
+        box.appendChild(field(item, "summary", "One-line summary", { multiline: true, rows: 2 }));
+        if (!item.highlights) item.highlights = [];
+        if (!item.tags) item.tags = [];
+        box.appendChild(stringList(item.highlights, "Bullet points"));
+        box.appendChild(stringList(item.tags, "Tags"));
+      }));
+  }));
+
+  // Education
+  root.appendChild(section("Education", data.education.length + " entries", (b) => {
+    b.appendChild(objectList(data.education, "Qualifications",
+      (e) => e.qualification || "Qualification",
+      { qualification: "", institution: "", dates: "" },
+      (item, box) => {
+        box.appendChild(field(item, "qualification", "Qualification"));
+        const row = el("div", "row");
+        row.appendChild(field(item, "institution", "Institution"));
+        row.appendChild(field(item, "dates", "Dates"));
+        box.appendChild(row);
+      }));
+  }));
+
+  // Projects
+  root.appendChild(section("Projects", data.projects.length + " projects", (b) => {
+    b.appendChild(objectList(data.projects, "Projects",
+      (p) => p.title || "Project",
+      { id: "", title: "", blurb: "", diagram: "", video: "", tech: [], github: "", demo: "", writeup: [] },
+      (item, box) => {
+        const row = el("div", "row");
+        row.appendChild(field(item, "title", "Title"));
+        row.appendChild(field(item, "id", "URL id (no spaces)", { placeholder: "my-project" }));
+        box.appendChild(row);
+        box.appendChild(field(item, "blurb", "Card blurb (one sentence)", { multiline: true, rows: 2 }));
+        const row2 = el("div", "row");
+        row2.appendChild(field(item, "diagram", "Diagram image path", { placeholder: "diagrams/foo.svg" }));
+        row2.appendChild(field(item, "video", "YouTube video ID", { placeholder: "dQw4w9WgXcQ" }));
+        box.appendChild(row2);
+        const row3 = el("div", "row");
+        row3.appendChild(field(item, "github", "GitHub URL"));
+        row3.appendChild(field(item, "demo", "Live demo URL"));
+        box.appendChild(row3);
+        if (!item.tech) item.tech = [];
+        box.appendChild(stringList(item.tech, "Tech tags"));
+
+        if (!item.writeup) item.writeup = [];
+        box.appendChild(objectList(item.writeup, "Write-up",
+          (w) => (w.type === "h" ? "Heading: " : "Paragraph: ") + (w.text || "").slice(0, 44),
+          { type: "p", text: "" },
+          (blk, bbox) => {
+            const lab = el("label", null, "Block type"); bbox.appendChild(lab);
+            const sel = el("select");
+            sel.innerHTML = '<option value="p">Paragraph</option><option value="h">Heading</option>';
+            sel.value = blk.type || "p";
+            sel.addEventListener("change", () => { blk.type = sel.value; });
+            bbox.appendChild(sel);
+            bbox.appendChild(field(blk, "text", "Text", { multiline: true, rows: 3 }));
+          }));
+      }));
+  }));
+
+  status("ready — " + data.projects.length + " projects loaded");
+}
+
+/* ---- Load / save ---- */
+function load(json) {
+  data = json;
+  ["links", "skills", "experience", "education", "projects"].forEach((k) => { if (!data[k]) data[k] = []; });
+  if (data.visitsApi == null) data.visitsApi = "";
+  render();
+}
+
+fetch("content.json", { cache: "no-cache" })
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(load)
+  .catch(() => {
+    status("couldn't auto-load content.json — use “Load a file…”");
+    document.getElementById("forms").innerHTML =
+      '<div class="note">Open this page through VS Code&rsquo;s <strong>Live Preview</strong> so it can read ' +
+      '<code>content.json</code> automatically, or click <strong>Load a file…</strong> and pick it manually.</div>';
+  });
+
+document.getElementById("load-btn").addEventListener("click", () =>
+  document.getElementById("file-input").click());
+
+document.getElementById("file-input").addEventListener("change", (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try { load(JSON.parse(reader.result)); status("loaded " + f.name); }
+    catch (err) { alert("That file isn't valid JSON:\n\n" + err.message); }
+  };
+  reader.readAsText(f);
+});
+
+document.getElementById("save-btn").addEventListener("click", () => {
+  if (!data) { alert("Nothing loaded yet."); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "content.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  status("downloaded — now replace content.json in your repo, then commit & push");
+});
+</script>
+</body>
+</html>

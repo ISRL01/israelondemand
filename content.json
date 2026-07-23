@@ -1,0 +1,208 @@
+{
+  "name": "Israel Shobowale",
+  "title": "AWS Cloud Support Engineer",
+  "location": "Adelaide, Australia",
+  "tagline": "Methodical troubleshooter focused on least-privilege access, cloud-hosted apps, and clear documentation.",
+  "photo": "headshot.jpg",
+  "visitsApi": "",
+  "links": [
+    {
+      "label": "GitHub",
+      "href": "https://github.com/ISRL01"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/your-handle"
+    },
+    {
+      "label": "Email",
+      "href": "mailto:dammyshobo@gmail.com"
+    }
+  ],
+  "summary": "AWS cloud support engineer with 2+ years supporting business-critical documentation, data and process workflows, plus hands-on, self-directed experience deploying and troubleshooting cloud-hosted applications on AWS. I diagnose issues methodically, work directly with stakeholders, and keep clear documentation. Currently studying for the AWS Solutions Architect Associate certification.",
+  "skills": [
+    "EC2",
+    "Amazon S3",
+    "CloudFormation",
+    "CloudWatch",
+    "Systems Manager",
+    "IAM & least-privilege",
+    "Infrastructure as Code",
+    "Troubleshooting",
+    "Log analysis",
+    "Documentation",
+    "AWS SAA (in progress)"
+  ],
+  "experience": [
+    {
+      "role": "Cloud Support Engineer",
+      "company": "Inclusive Lifestyle",
+      "dates": "Oct 2024 — Present",
+      "summary": "Day-to-day cloud support for a system storing sensitive client documentation and support records.",
+      "highlights": [
+        "Monitor IAM access across the organisation's cloud environment, reviewing and restricting permissions to enforce least-privilege for staff and systems.",
+        "Review CloudWatch logs daily for the application hosting client documentation and support records, checking for anomalies and access issues.",
+        "Support operational continuity of a system storing sensitive client data, applying consistent monitoring discipline."
+      ],
+      "tags": [
+        "IAM",
+        "CloudWatch",
+        "Least-privilege"
+      ]
+    },
+    {
+      "role": "Cloud & Technology Intern",
+      "company": "SWEAT Pty",
+      "dates": "Feb 2024 — Jun 2024",
+      "summary": "Hands-on AWS project work — deployment, infrastructure-as-code, and live-fault troubleshooting.",
+      "highlights": [
+        "Deployed and configured applications on AWS EC2 using CloudFormation, integrating S3 for media storage.",
+        "Diagnosed a live application fault (broken image loading) via CloudWatch logs, traced it to a misconfigured CloudFormation resource, corrected it and redeployed.",
+        "Administered infrastructure through AWS Systems Manager Session Manager, using least-privilege access in place of direct SSH.",
+        "Applied EC2, S3, CloudWatch, IaC (CloudFormation) and IAM hands-on through project work rather than theory alone."
+      ],
+      "tags": [
+        "EC2",
+        "CloudFormation",
+        "S3",
+        "Systems Manager"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "qualification": "Master of Business System Analytics (Adv)",
+      "institution": "Torrens University, Adelaide, Australia",
+      "dates": "2023 — 2024"
+    },
+    {
+      "qualification": "BSc, Management Information Systems",
+      "institution": "Eastern Mediterranean University, Turkey",
+      "dates": "2013 — 2018"
+    }
+  ],
+  "projects": [
+    {
+      "id": "aws-portfolio",
+      "title": "This site, deployed on AWS",
+      "blurb": "A hand-coded static portfolio with a fully automated AWS deploy pipeline.",
+      "diagram": "",
+      "video": "",
+      "tech": [
+        "S3",
+        "CloudFront",
+        "Route 53",
+        "ACM",
+        "GitHub Actions",
+        "IAM / OIDC"
+      ],
+      "github": "https://github.com/ISRL01/israelondemand",
+      "demo": "https://israelondemand.com",
+      "writeup": [
+        {
+          "type": "p",
+          "text": "The site you're reading is itself the project: a static portfolio built from plain HTML, CSS and JavaScript, hosted on AWS and deployed automatically on every git push."
+        },
+        {
+          "type": "h",
+          "text": "How it's built"
+        },
+        {
+          "type": "p",
+          "text": "Files live in S3, with CloudFront in front for HTTPS and global caching, and Route 53 pointing my domain at the distribution. There's no server and no database — the sidebar navigation is client-side JavaScript, so the whole thing stays static and cheap to run."
+        },
+        {
+          "type": "h",
+          "text": "The pipeline"
+        },
+        {
+          "type": "p",
+          "text": "GitHub Actions deploys on push using an IAM role assumed via OIDC — no long-lived access keys stored anywhere — scoped with least-privilege permissions to just this bucket. Editing the site is now: commit, push, done."
+        }
+      ]
+    },
+    {
+      "id": "tic-tac-toe",
+      "title": "Tic-tac-toe, playable here",
+      "blurb": "A browser game with two-player mode and an unbeatable computer opponent.",
+      "component": "tictactoe",
+      "diagram": "",
+      "video": "",
+      "tech": [
+        "JavaScript",
+        "Minimax",
+        "DOM",
+        "Accessibility"
+      ],
+      "github": "https://github.com/ISRL01/israelondemand",
+      "demo": "",
+      "writeup": [
+        {
+          "type": "p",
+          "text": "A small game built in plain JavaScript — no framework, no build step. Play it above: switch between two-player and the computer opponent, which cannot be beaten."
+        },
+        {
+          "type": "h",
+          "text": "How the computer plays"
+        },
+        {
+          "type": "p",
+          "text": "The opponent uses minimax, a recursive algorithm that plays out every remaining sequence of moves and scores each one, assuming both sides play optimally. It then picks the move with the best guaranteed outcome. Wins are scored higher when they arrive sooner and losses lower when they arrive later, so it takes the quickest win available and stalls as long as possible when losing. The best any player can manage against it is a draw."
+        },
+        {
+          "type": "h",
+          "text": "Building it"
+        },
+        {
+          "type": "p",
+          "text": "Board state is a nine-item array, and a single check against the eight winning lines decides each turn's outcome. The interface re-renders from that state after every move, with one delegated click handler for the whole board. Squares are real buttons with labels, so the game is keyboard and screen-reader accessible."
+        },
+        {
+          "type": "h",
+          "text": "How it's deployed"
+        },
+        {
+          "type": "p",
+          "text": "It ships as part of this site — static files in GitHub, deployed automatically to AWS Amplify on every push, with no server or database behind it."
+        }
+      ]
+    },
+    {
+      "id": "ppl-tracker",
+      "title": "PPL strength-training tracker",
+      "blurb": "A push/pull/legs gym tracker built around a double-progression engine.",
+      "diagram": "",
+      "video": "",
+      "tech": [
+        "React",
+        "Vite",
+        "Supabase",
+        "PWA"
+      ],
+      "github": "",
+      "demo": "",
+      "writeup": [
+        {
+          "type": "p",
+          "text": "A personal strength-training web app that plans and logs push/pull/legs sessions and drives progression automatically."
+        },
+        {
+          "type": "h",
+          "text": "What it does"
+        },
+        {
+          "type": "p",
+          "text": "The core is a double-progression engine: it tracks weight-and-reps against a configurable rep range and tells you when to add load. Every session closes with two ab exercises regardless of day type."
+        },
+        {
+          "type": "h",
+          "text": "Stack"
+        },
+        {
+          "type": "p",
+          "text": "Built with React + Vite on a Supabase backend (Postgres, row-level security), shipped PWA-first with a clean, auth-ready schema so features can be layered on without costly refactors."
+        }
+      ]
+    }
+  ]
+}
