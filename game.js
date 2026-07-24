@@ -128,7 +128,7 @@
         '<div class="ttt">' +
           '<div class="ttt-bar">' +
             '<div class="ttt-modes" role="group" aria-label="Game mode">' +
-              '<button class="ttt-mode' + (state.mode === "cpu" ? " is-on" : "") + '" data-mode="cpu">vs Computer</button>' +
+              '<button class="ttt-mode' + (state.mode === "cpu" ? " is-on" : "") + '" data-mode="cpu">vs ISRL</button>' +
               '<button class="ttt-mode' + (state.mode === "2p" ? " is-on" : "") + '" data-mode="2p">2 Player</button>' +
             "</div>" +
             '<button class="ttt-reset" data-reset>New game</button>' +

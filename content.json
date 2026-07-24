@@ -2,9 +2,9 @@
   "name": "Israel Shobowale",
   "title": "AWS Cloud Support Engineer",
   "location": "Adelaide, Australia",
-  "tagline": "Methodical troubleshooter focused on least-privilege access, cloud-hosted apps, and clear documentation.",
+  "tagline": "Cloud engineer focused on secure, well-documented deployments. I build and maintain cloud infrastructure, monitoring performance and resolving issues before they become outages.",
   "photo": "headshot.jpg",
-  "visitsApi": "",
+  "visitsApi": "https://waiqdvcgblnqqcststtnqx4iou0nsewb.lambda-url.us-east-1.on.aws/ ",
   "links": [
     {
       "label": "GitHub",
@@ -12,14 +12,14 @@
     },
     {
       "label": "LinkedIn",
-      "href": "https://www.linkedin.com/in/your-handle"
+      "href": "https://www.linkedin.com/in/israel-shobowale-45063411a/"
     },
     {
       "label": "Email",
       "href": "mailto:dammyshobo@gmail.com"
     }
   ],
-  "summary": "AWS cloud support engineer with 2+ years supporting business-critical documentation, data and process workflows, plus hands-on, self-directed experience deploying and troubleshooting cloud-hosted applications on AWS. I diagnose issues methodically, work directly with stakeholders, and keep clear documentation. Currently studying for the AWS Solutions Architect Associate certification.",
+  "summary": "I got into cloud engineering because I like taking things apart to see how they actually work. Most of what I do comes down to one question: what happens when this breaks? I build cloud infrastructure with that in mind. Secure and properly documented. Currently deep in AWS and Azure, chasing the AWS SAA cert, and using my own portfolio site as a testbed for the CI/CD pipelines I'm learning to build.",
   "skills": [
     "EC2",
     "Amazon S3",
@@ -31,7 +31,8 @@
     "Troubleshooting",
     "Log analysis",
     "Documentation",
-    "AWS SAA (in progress)"
+    "AWS SAA (in progress)",
+    ""
   ],
   "experience": [
     {
@@ -85,8 +86,8 @@
     {
       "id": "aws-portfolio",
       "title": "This site, deployed on AWS",
-      "blurb": "A hand-coded static portfolio with a fully automated AWS deploy pipeline.",
-      "diagram": "",
+      "blurb": "CV/portfolio site with AWS amplify",
+      "diagram": "site-architecture.svg",
       "video": "",
       "tech": [
         "S3",
@@ -94,37 +95,59 @@
         "Route 53",
         "ACM",
         "GitHub Actions",
-        "IAM / OIDC"
+        "IAM / OIDC",
+        "Cloudwatch + error Alarms",
+        "SNS"
       ],
       "github": "https://github.com/ISRL01/israelondemand",
       "demo": "https://israelondemand.com",
       "writeup": [
         {
+          "type": "h",
+          "text": "My portfolio site, plus the AWS setup that builds, deploys and monitors it."
+        },
+        {
           "type": "p",
-          "text": "The site you're reading is itself the project: a static portfolio built from plain HTML, CSS and JavaScript, hosted on AWS and deployed automatically on every git push."
+          "text": "This site is the project. It's plain HTML, CSS and JavaScript with no framework, written with AI assistance and deployed on AWS. I designed the architecture, built and configured everything on the AWS side, and I maintain it. The diagram below shows the whole system; the notes are on the decisions worth explaining."
         },
         {
           "type": "h",
-          "text": "How it's built"
+          "text": "Deploying it"
         },
         {
           "type": "p",
-          "text": "Files live in S3, with CloudFront in front for HTTPS and global caching, and Route 53 pointing my domain at the distribution. There's no server and no database — the sidebar navigation is client-side JavaScript, so the whole thing stays static and cheap to run."
+          "text": "The code lives in GitHub. Amplify watches the repo and rebuilds on every push to main, and handles hosting, the CDN and the TLS certificate. Route 53 provides DNS for israelondemand.dev, a .dev domain, which browsers refuse to load without HTTPS, so that had to work from the start."
         },
         {
           "type": "h",
-          "text": "The pipeline"
+          "text": "Why Amplify and not S3 with CloudFront"
         },
         {
           "type": "p",
-          "text": "GitHub Actions deploys on push using an IAM role assumed via OIDC — no long-lived access keys stored anywhere — scoped with least-privilege permissions to just this bucket. Editing the site is now: commit, push, done."
+          "text": "I built it the manual way first: S3 for the files, CloudFront for HTTPS and caching, GitHub Actions deploying on push through an IAM role assumed with OIDC, so no keys were stored in the repo. The workflow ran and authenticated, but I kept hitting failures on the role's trust policy, and chose to ship on Amplify rather than keep debugging. Amplify does in one service what those four did between them. I traded fine control over caching for a working site with far less to maintain the right call at this size. I still plan to finish the S3 and CloudFront version as its own exercise."
+        },
+        {
+          "type": "h",
+          "text": "The backend"
+        },
+        {
+          "type": "p",
+          "text": "The visit counter is a small serverless API: the browser calls a Lambda through a Function URL, and it increments two counters in DynamoDB, an all-time total and one per day. The increment uses DynamoDB's atomic ADD rather than reading and writing back, so two visitors at the same instant can't overwrite each other. The Lambda's role can call UpdateItem on that one table and nothing else, and the counter stores no IPs, location or cookies. If the API doesn't respond, the counter removes itself rather than showing a broken sidebar."
+        },
+        {
+          "type": "h",
+          "text": "Monitoring and cost"
+        },
+        {
+          "type": "p",
+          "text": "Two alarms share one path: a CloudWatch alarm on Lambda errors and an AWS Budgets threshold on spend both email me through a single SNS topic, so I hear early if the counter breaks or cost creeps up. Log retention is set to 30 days. Nothing runs on a server and there's no VPC the only real monthly cost is the Route 53 hosted zone."
         }
       ]
     },
     {
       "id": "tic-tac-toe",
       "title": "Tic-tac-toe, playable here",
-      "blurb": "A browser game with two-player mode and an unbeatable computer opponent.",
+      "blurb": "Feeling Up to it? play tic tac toe with ISRL, warning, I can never loose. You can also play with a friend so you get a fighting chance. 😉",
       "component": "tictactoe",
       "diagram": "",
       "video": "",
@@ -139,68 +162,11 @@
       "writeup": [
         {
           "type": "p",
-          "text": "A small game built in plain JavaScript — no framework, no build step. Play it above: switch between two-player and the computer opponent, which cannot be beaten."
-        },
-        {
-          "type": "h",
-          "text": "How the computer plays"
-        },
-        {
-          "type": "p",
-          "text": "The opponent uses minimax, a recursive algorithm that plays out every remaining sequence of moves and scores each one, assuming both sides play optimally. It then picks the move with the best guaranteed outcome. Wins are scored higher when they arrive sooner and losses lower when they arrive later, so it takes the quickest win available and stalls as long as possible when losing. The best any player can manage against it is a draw."
-        },
-        {
-          "type": "h",
-          "text": "Building it"
-        },
-        {
-          "type": "p",
-          "text": "Board state is a nine-item array, and a single check against the eight winning lines decides each turn's outcome. The interface re-renders from that state after every move, with one delegated click handler for the whole board. Squares are real buttons with labels, so the game is keyboard and screen-reader accessible."
-        },
-        {
-          "type": "h",
-          "text": "How it's deployed"
+          "text": "A small X & O game built in plain JavaScript no framework, no build step. Play it above: switch between two-player and the computer opponent ISRL, which SERIOUSLY cannot be beaten."
         },
         {
           "type": "p",
           "text": "It ships as part of this site — static files in GitHub, deployed automatically to AWS Amplify on every push, with no server or database behind it."
-        }
-      ]
-    },
-    {
-      "id": "ppl-tracker",
-      "title": "PPL strength-training tracker",
-      "blurb": "A push/pull/legs gym tracker built around a double-progression engine.",
-      "diagram": "",
-      "video": "",
-      "tech": [
-        "React",
-        "Vite",
-        "Supabase",
-        "PWA"
-      ],
-      "github": "",
-      "demo": "",
-      "writeup": [
-        {
-          "type": "p",
-          "text": "A personal strength-training web app that plans and logs push/pull/legs sessions and drives progression automatically."
-        },
-        {
-          "type": "h",
-          "text": "What it does"
-        },
-        {
-          "type": "p",
-          "text": "The core is a double-progression engine: it tracks weight-and-reps against a configurable rep range and tells you when to add load. Every session closes with two ab exercises regardless of day type."
-        },
-        {
-          "type": "h",
-          "text": "Stack"
-        },
-        {
-          "type": "p",
-          "text": "Built with React + Vite on a Supabase backend (Postgres, row-level security), shipped PWA-first with a clean, auth-ready schema so features can be layered on without costly refactors."
         }
       ]
     }

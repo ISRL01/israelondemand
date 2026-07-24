@@ -33,7 +33,7 @@ function renderSidebar() {
 
 /* ---- Visitor counter (hides itself if not configured or unreachable) ---- */
 function renderVisits() {
-  const api = site.visitsApi;
+  const api = (site.visitsApi || "").trim();
   if (!api) return;
 
   const box = document.createElement("div");
@@ -53,7 +53,64 @@ function renderVisits() {
     .catch(() => box.remove());
 }
 
-/* ---- Resume view ---- */
+/* shared hero block (name, title, tagline) */
+function heroHTML() {
+  return `
+    <section class="hero reveal">
+      <span class="hero__photo"><span class="initials">${initials(site.name)}</span></span>
+      <div>
+        <h1 class="hero__name">${esc(site.name)}</h1>
+        <p class="hero__title">${esc(site.title)}</p>
+        <p class="hero__loc">${esc(site.location)}</p>
+        <p class="hero__tagline">${esc(site.tagline)}</p>
+      </div>
+    </section>`;
+}
+
+function skillsHTML() {
+  return `<ul class="skills">${(site.skills || []).filter(Boolean).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
+}
+
+function certsHTML() {
+  const certs = site.certifications || [];
+  if (!certs.length) return "";
+  return `<div class="education">${certs.map((c) => `
+    <div class="edu">
+      <div class="edu__qual">${esc(c.name)}</div>
+      <div class="edu__dates">${esc(c.status || "")}</div>
+      <div class="edu__inst">${esc(c.issuer || "")}</div>
+    </div>`).join("")}</div>`;
+}
+
+/* ---- Home / intro view ---- */
+function renderHome() {
+  view().innerHTML = `
+    ${heroHTML()}
+
+    <section class="panel reveal">
+      <p class="summary">${esc(site.summary)}</p>
+    </section>
+
+    <section class="panel reveal">
+      <h2 class="section-title">Skills</h2>
+      ${skillsHTML()}
+    </section>
+
+    ${site.certifications && site.certifications.length ? `
+    <section class="panel reveal">
+      <h2 class="section-title">Certifications</h2>
+      ${certsHTML()}
+    </section>` : ""}
+
+    <div class="proj-actions reveal">
+      <a class="btn btn--primary" href="#resume">See full r\u00e9sum\u00e9 \u2192</a>
+      <a class="btn" href="#projects">View projects \u2197</a>
+    </div>`;
+
+  swapPhoto(".hero__photo");
+}
+
+/* ---- Resume view (full detail) ---- */
 function renderResume() {
   const exp = (site.experience || []).map((job, i) => `
     <div class="entry reveal" data-entry="${i}">
@@ -73,15 +130,8 @@ function renderResume() {
     </div>`).join("");
 
   view().innerHTML = `
-    <section class="hero reveal">
-      <span class="hero__photo"><span class="initials">${initials(site.name)}</span></span>
-      <div>
-        <h1 class="hero__name">${esc(site.name)}</h1>
-        <p class="hero__title">${esc(site.title)}</p>
-        <p class="hero__loc">${esc(site.location)}</p>
-        <p class="hero__tagline">${esc(site.tagline)}</p>
-      </div>
-    </section>
+    <a class="back" href="#home">\u2190 Home</a>
+    ${heroHTML()}
 
     <section class="panel reveal">
       <h2 class="section-title">Profile</h2>
@@ -98,8 +148,14 @@ function renderResume() {
 
     <section class="panel reveal">
       <h2 class="section-title">Skills</h2>
-      <ul class="skills">${(site.skills || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+      ${skillsHTML()}
     </section>
+
+    ${site.certifications && site.certifications.length ? `
+    <section class="panel reveal">
+      <h2 class="section-title">Certifications</h2>
+      ${certsHTML()}
+    </section>` : ""}
 
     <section class="panel reveal">
       <h2 class="section-title">Education</h2>
@@ -141,7 +197,6 @@ function renderProjectDetail(id) {
   const p = (site.projects || []).find((x) => x.id === id);
   if (!p) { location.hash = "#projects"; return; }
 
-  // A project can show a live interactive component instead of a diagram.
   const showcase = p.component
     ? `<div id="component-mount"></div>`
     : (p.diagram
@@ -179,15 +234,16 @@ function renderProjectDetail(id) {
 
 /* ---- Router ---- */
 function route() {
-  const raw = location.hash.replace(/^#/, "") || "resume";
+  const raw = location.hash.replace(/^#/, "") || "home";
   const parts = raw.split("/");
   const section = parts[0], id = parts[1];
 
   if (section === "projects") renderProjects();
   else if (section === "project" && id) renderProjectDetail(id);
-  else renderResume();
+  else if (section === "resume") renderResume();
+  else renderHome();
 
-  const navSection = section === "project" ? "projects" : section;
+  const navSection = section === "project" ? "projects" : (section || "home");
   document.querySelectorAll(".side-nav a").forEach((a) =>
     a.classList.toggle("is-active", a.dataset.section === navSection));
 
